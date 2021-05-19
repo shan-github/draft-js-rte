@@ -129,10 +129,10 @@ export default function TextEditor() {
   }
 
   useEffect(() => {
-    console.log('-----------')
+    // console.log('-----------')
     // currentContent = editorState.getCurrentContent()
     setInlineToolbar({ image: null })
-    console.log('-----------')
+    // console.log('-----------')
   }, [editorState])
 
   const handleLinkCreation = () => {

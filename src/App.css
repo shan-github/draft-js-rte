@@ -1,38 +1,220 @@
-.App {
-  text-align: center;
+:root {
+  --accent-color: #2196ff;
+  --dark-color: #000;
 }
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+body {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+  background-color: #2196ff25;
 }
 
-.App-link {
-  color: #61dafb;
+* {
+  box-sizing: border-box;
+}
+.text-editor {
+  display: flex;
+  flex-direction: column;
+  width: 50rem;
+  height: 95vh;
+  margin-top: 5vh;
+}
+.text-editor .t-toolbar ul {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 1rem;
+}
+.text-editor .t-toolbar ul > li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  /* margin-right: 0.3rem; */
+  font-size: 1.1rem;
+  transition: 0.2s;
+  line-height: 0;
+  color: #fff;
+  /* border-radius: 5px; */
+}
+.text-editor .t-toolbar ul > li i {
+  font-family: serif;
+}
+.text-editor .t-toolbar ul .t-div {
+  margin-right: 1rem;
+  border-radius: 0 5px 5px 0;
+}
+.text-editor .t-toolbar ul .o-disabled {
+  color: #ffffff45 !important;
+  pointer-events: none;
+  background-color: transparent !important;
+}
+.text-editor .t-toolbar ul .t-div + li,
+.text-editor .t-toolbar ul > li:first-child {
+  border-radius: 5px 0 0 5px;
+}
+.text-editor .t-toolbar ul .t-div::after {
+  content: '';
+  position: absolute;
+  border-right: 1px solid #ffffff76;
+  height: 70%;
+  right: -0.5rem;
+}
+.text-editor .t-toolbar ul > li .t-ttip {
+  opacity: 0;
+  display: block;
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  z-index: 10;
+  background-color: var(--dark-color);
+  padding: 0.8rem 0.5rem;
+  color: #fff;
+  box-shadow: 0 2px 5px #00000012;
+  transition: 0.2s;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.text-editor .t-toolbar ul > li .t-ttip::after {
+  content: '';
+  position: absolute;
+  border: 5px solid transparent;
+  border-top-color: var(--dark-color);
+  top: 100%;
+  right: 50%;
+  transform: translateX(50%);
+}
+.text-editor .t-toolbar ul .selected {
+  /* box-shadow: 0 2px 5px 1px #2196ff22; */
+  background-color: #ffffff46;
+  color: #fff;
+}
+.text-editor .t-toolbar ul > li:hover .t-ttip {
+  opacity: 1;
+}
+.text-editor .t-toolbar ul > li:hover {
+  color: #fff;
+  box-shadow: 0 0 0 1px #ffffffa6;
+}
+.text-editor .t-toolbar ul > li:active {
+  background-color: #00000056;
+}
+.text-editor .t-toolbar {
+  /* padding: 0.5rem; */
+  background-color: var(--accent-color);
+  border-radius: 0.5rem 0.5rem 0 0;
+  z-index: 10;
 }
 
-@keyframes App-logo-spin {
+.editor-wrapper{
+  position: relative;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.DraftEditor-root,
+.DraftEditor-editorContainer,
+.public-DraftEditor-content {
+  min-height: 100%;
+}
+.DraftEditor-root {
+  box-sizing: content-box;
+  /* border: 1px solid var(--accent-color); */
+  background-color: #fff;
+  box-shadow: 0 0 3rem #2196ff54;
+}
+.public-DraftEditor-content {
+  padding: 1rem;
+}
+
+.text--align-left {
+  text-align: left;
+}
+.text--align-center {
+  text-align: center;
+}
+.text--align-right {
+  text-align: right;
+}
+.text--justify {
+  text-align: justify;
+}
+.text--b-quote {
+  background-color: #2196ff13;
+  border-left: 3px solid var(--accent-color);
+  margin-left: 0;
+  padding: 1rem 2rem;
+  font-style: oblique;
+}
+.inline-link {
+  position: relative;
+  color: var(--accent-color);
+}
+.inline-link:hover {
+  background-color: #2196ff12;
+}
+.inline-link:hover > .link-text {
+  display: inline-flex;
+}
+.inline-link > .link-text {
+  animation: popup 0.2s;
+  display: none;
+  align-items: center;
+  white-space: nowrap;
+  position: absolute;
+  background-color: var(--accent-color);
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.8rem;
+  padding: 5px 0.5rem;
+  bottom: 100%;
+  left: 0;
+  border-radius: 3px;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  /* opacity: 0; */
+  transition: 0.1s;
+  box-shadow: 0 0 0 1px #fff;
+}
+.inline-link > .link-text svg {
+  margin-right: 5px;
+}
+.text-editor .DraftEditor-root figure {
+  margin-left: 0;
+}
+.text-editor .DraftEditor-root figure img {
+  margin: 0 1rem;
+}
+.inline-toolbar{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  height: 2rem;
+  width: 2rem;
+  box-shadow: 0 0 0 2px var(--accent-color);
+  right: 2rem;
+  top: 2rem;
+}
+
+@keyframes popup {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translate(-50%, 5px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }

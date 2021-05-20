@@ -12,19 +12,3 @@ os: linux
 files:
   - source: /
     destination: /home/ubuntu/tyk-front/build/
-
-# permissions:
-#   - object:
-#     pattern:
-#     except:
-#     owner:
-#     group:
-#     mode: 
-#     acls:
-#       -
-#     context:
-#       user:
-#       type:
-#       range:
-#     type:
-#       -

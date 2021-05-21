@@ -10,15 +10,10 @@ version: 0.0
 os: linux
 
 files:
-  - source: /
+  - source: /build
     destination: /home/ubuntu/tyk-front
 
 hooks:
-  AfterInstall:
-    - location: scripts/install_deps.sh
-      runas: root
-    - location: scripts/build_app.sh
-      runas: root
   ApplicationStart:
     - location: scripts/restart_services.sh
       runas: root

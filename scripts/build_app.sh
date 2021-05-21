@@ -1,2 +1,2 @@
-cd ~/home/ubuntu/tyk-front
+cd ~/tyk-front
 yarn run build

@@ -10,7 +10,7 @@ version: 0.0
 os: linux
 
 files:
-  - source: /build
+  - source: /
     destination: /home/ubuntu/tyk-front
 
 hooks:

@@ -15,6 +15,9 @@ files:
 file_exists_behavior: OVERWRITE
 
 hooks:
+  AfterInstall:
+    - location: scripts/install_deps.sh
+      runas: root
   ApplicationStart:
     - location: scripts/restart_services.sh
       runas: root

@@ -7,10 +7,10 @@ import {
   RichUtils,
   AtomicBlockUtils,
 } from 'draft-js'
-import Immutable from 'immutable'
 import { IoEye, IoEyeOff, IoLink } from 'react-icons/io5'
 import { RiFileUploadLine } from 'react-icons/ri'
 import {
+  atomicEntityTypes,
   blockStylesMap,
   customBlockStyleFn,
   customInlineStylesMap,
@@ -22,14 +22,11 @@ import {
   BiAlignMiddle,
   BiAlignRight,
   BiBorderAll,
-  BiCaptions,
   BiCheck,
-  BiCode,
   BiCodeAlt,
+  BiDownArrowAlt,
   BiExpand,
-  BiImageAlt,
-  BiLeftIndent,
-  BiRightIndent,
+  BiRightArrowAlt,
   BiSquareRounded,
   BiSun,
   BiTrash,
@@ -38,29 +35,30 @@ import {
 const imgAlignmentEnum = { LEFT: -1, CENTER: 0, RIGHT: 1 }
 
 let currentContent
+
 const MediaBlock = props => {
   const ekey = props.block.getEntityAt(0)
+  const eType = props.contentState.getEntity(ekey).getType()
   const {
     src,
-    width,
     alignment,
     float,
     isBordered,
     isStretched,
     hasShadow,
     isRound,
+    width,
+    height,
   } = ekey ? props.contentState.getEntity(ekey).getData() : {}
+  // console.log(width, height)
   const imgStyles = {
     display: 'block',
-    width: isStretched ? '100%' : '30%',
+    width: isStretched ? '100%' : width,
     boxSizing: 'border-box',
-    pointerEvents: 'none',
     maxWidth: '100%',
     border: isBordered ? '1px solid #0002' : 'none',
     float,
-    maxHeight: '300px',
     objectFit: 'cover',
-    // clear: 'both',
     boxShadow: hasShadow ? '0 2px 5px #0002' : 'none',
     borderRadius: isRound ? 10 : 0,
     margin:
@@ -69,8 +67,16 @@ const MediaBlock = props => {
         : `0 ${alignment === imgAlignmentEnum.RIGHT ? 'auto' : '1rem'} 0 ${
             alignment === imgAlignmentEnum.LEFT ? 'auto' : '1rem'
           }`,
+    height,
   }
-  return <img src={src} style={imgStyles} />
+  switch (eType) {
+    case atomicEntityTypes.IMAGE:
+      return <img src={src} style={imgStyles} />
+    case atomicEntityTypes.VIDEO:
+      return <iframe style={imgStyles} src={src} />
+    default:
+      return null
+  }
 }
 const LinkComponent = props => {
   const { url } = props.contentState.getEntity(props.entityKey).getData()
@@ -89,7 +95,7 @@ const linkStrategy = (contentBlock, cb, contentState) => {
   contentBlock.findEntityRanges(
     ch =>
       (entityKey = ch.getEntity()) &&
-      contentState.getEntity(entityKey).getType() === 'LINK',
+      contentState.getEntity(entityKey).getType() === atomicEntityTypes.LINK,
     cb
   )
 }
@@ -121,25 +127,70 @@ const ToolbarStyleList = ({ list, isPreview, styleRenderFn, onItemClick }) => {
   )
 }
 
+const BlockResizer = ({
+  icon: ActionIcon,
+  onResize,
+  type,
+  customClassName,
+  onMouseRelease,
+}) => {
+  const [isClicked, setIsClicked] = useState(false)
+  const deltaOffset = useRef({ dx: 0, dy: 0 })
+  const handleResize = e => {
+    if (isClicked)
+      onResize({
+        dx: e.clientX - deltaOffset.current.dx,
+        dy: e.clientY - deltaOffset.current.dy,
+        type,
+      })
+    deltaOffset.current.dx = e.clientX
+    deltaOffset.current.dy = e.clientY
+  }
+  return (
+    <div
+      className={`a-t-resize ${customClassName}`}
+      onMouseMove={handleResize}
+      onMouseUp={() => {
+        onMouseRelease({ type })
+        setIsClicked(false)
+      }}
+      onMouseLeave={() => {
+        if (isClicked) {
+          onMouseRelease({ type })
+          setIsClicked(false)
+        }
+      }}>
+      <span onMouseDown={() => setIsClicked(true)}>
+        {ActionIcon && <ActionIcon />}
+      </span>
+    </div>
+  )
+}
+
 const AtomicBlockToolbar = ({
   editorState,
   blockType,
   mutateEntity,
   entityData,
+  onEntityRemove,
 }) => {
   const [elmOffset, setElmOffset] = useState(null)
-  // const [isClicked, setIsClicked] = useState(false)
-  // const dx = useRef(0)
+  const currentSelectedElm = useRef(null)
   const updateOffset = () => {
-    let currentElm = getSelectedBlockElement()
-    if (currentElm && (currentElm = currentElm.firstChild))
-      setElmOffset({
-        top: currentElm.offsetTop,
-        left: currentElm.offsetLeft,
-        width: currentElm.clientWidth,
-        height: currentElm.clientHeight,
-      })
-    // else setElmOffset(null)
+    const elm = getSelectedBlockElement()
+    if (elm) currentSelectedElm.current = elm
+    if (currentSelectedElm.current && currentSelectedElm.current.firstChild) {
+      // const bounds = currentSelectedElm.current.getBoundingClientRect()
+      const b = {
+        top: currentSelectedElm.current.offsetTop,
+        left:
+          currentSelectedElm.current.firstChild.offsetLeft +
+          currentSelectedElm.current.offsetLeft,
+        width: currentSelectedElm.current.firstChild.clientWidth,
+        height: currentSelectedElm.current.firstChild.clientHeight,
+      }
+      setElmOffset(b)
+    }
   }
   const getSelectedBlockElement = useCallback(() => {
     let selection = window.getSelection()
@@ -152,70 +203,104 @@ const AtomicBlockToolbar = ({
     } while (node != null)
     return null
   }, [])
-  const toggleAlignment = alignment => {
-    if (entityData) {
-      mutateEntity({ float: 'none', alignment })
-      // setTimeout(updateOffset, 100)
-    }
-  }
-  const toggleFloat = floatPos => {
-    if (entityData) {
-      mutateEntity({ float: floatPos, alignment: 'flex-start' })
-      // setTimeout(updateOffset, 100)
-    }
-  }
-  const toggleBorder = () => {
-    if (entityData) {
-      mutateEntity({ isBordered: !entityData.isBordered })
-      // setTimeout(updateOffset, 100)
-    }
-  }
-  const toggleStretch = () => {
-    if (entityData) {
-      mutateEntity({ isStretched: !entityData.isStretched })
-      // setTimeout(updateOffset, 100)
-    }
-  }
-  const toggleShadow = () => {
-    if (entityData) {
-      mutateEntity({ hasShadow: !entityData.hasShadow })
-      // setTimeout(updateOffset, 100)
-    }
-  }
-  const toggleRoundCorners = () => {
-    if (entityData) {
-      mutateEntity({ isRound: !entityData.isRound })
-      // setTimeout(updateOffset, 100)
-    }
-  }
+
+  const toggleAlignment = alignment =>
+    mutateEntity({ float: 'none', alignment })
+
+  const toggleFloat = floatPos =>
+    mutateEntity({ float: floatPos, alignment: 'flex-start' })
+
+  const toggleBorder = () =>
+    mutateEntity({ isBordered: !entityData.isBordered })
+
+  const toggleStretch = () =>
+    mutateEntity({ isStretched: !entityData.isStretched })
+
+  const toggleShadow = () => mutateEntity({ hasShadow: !entityData.hasShadow })
+
+  const toggleRoundCorners = () =>
+    mutateEntity({ isRound: !entityData.isRound })
+
   useEffect(() => {
-    if (blockType === 'MEDIA') {
+    if (
+      entityData &&
+      (blockType === atomicEntityTypes.IMAGE ||
+        blockType === atomicEntityTypes.VIDEO)
+    )
       updateOffset()
-    } else setElmOffset(null)
+    else {
+      currentSelectedElm.current = null
+      setElmOffset(null)
+    }
   }, [blockType, entityData])
+
+  const onBlockResizeCancel = ({ type }) => {
+    if (currentSelectedElm.current && currentSelectedElm.current.firstChild)
+      mutateEntity(
+        type === 0
+          ? {
+              width: currentSelectedElm.current.firstChild.clientWidth,
+            }
+          : type === 1
+          ? {
+              height: currentSelectedElm.current.firstChild.clientHeight,
+            }
+          : {
+              width: currentSelectedElm.current.firstChild.clientWidth,
+              height: currentSelectedElm.current.firstChild.clientHeight,
+            }
+      )
+  }
+
+  const onBlockResize = ({ dx, dy, type }) => {
+    // if (entityData && entityData.width) {
+    if (currentSelectedElm.current) {
+      if (type === 0)
+        currentSelectedElm.current.firstChild.style.width = `${
+          currentSelectedElm.current.firstChild.clientWidth +
+          dx * (entityData.alignment === imgAlignmentEnum.CENTER ? 2 : 1)
+        }px`
+      else if (type === 1)
+        currentSelectedElm.current.firstChild.style.height = `${
+          currentSelectedElm.current.firstChild.clientHeight + dy
+        }px`
+      else {
+        currentSelectedElm.current.firstChild.style.width = `${
+          currentSelectedElm.current.firstChild.clientWidth + dx
+        }px`
+        currentSelectedElm.current.firstChild.style.height = `${
+          currentSelectedElm.current.firstChild.clientHeight + dy
+        }px`
+      }
+      updateOffset()
+    }
+    // }
+  }
   return (
     elmOffset && (
       <div className='atomic-toolbar' style={elmOffset ?? {}}>
-        {/* <span
-        onMouseDown={() => setIsClicked(true)}
-        onMouseUp={() => setIsClicked(false)}
-        onMouseLeave={() => setIsClicked(false)}
-        onMouseMove={e => {
-          if (isClicked) {
-            if (entityData && entityData.width) {
-              let w = dx.current === 0 ? 1 : e.clientX - dx.current
-              console.log(w, entityData)
-              updateOffset()
-              mutateEntity({
-                width: entityData.width + w,
-              })
-            }
-          }
-          dx.current = e.clientX
-        }}
-        >
-          <BiRightArrowAlt />
-        </span> */}
+        {entityData && !entityData.isStretched && (
+          <BlockResizer
+            icon={BiRightArrowAlt}
+            type={0}
+            onResize={onBlockResize}
+            onMouseRelease={onBlockResizeCancel}
+            customClassName='r-hor'
+          />
+        )}
+        <BlockResizer
+          icon={BiDownArrowAlt}
+          type={1}
+          onResize={onBlockResize}
+          onMouseRelease={onBlockResizeCancel}
+          customClassName='r-ver'
+        />
+        {/* <BlockResizer
+          icon={BiDownArrowAlt}
+          type={1}
+          onResize={onBlockResize}
+          customClassName='r-both'
+        /> */}
         <ul>
           <li
             className={
@@ -223,7 +308,7 @@ const AtomicBlockToolbar = ({
                 ? 'l-active'
                 : ''
             }
-            onClick={() => toggleAlignment(imgAlignmentEnum.RIGHT)}>
+            onMouseUp={() => toggleAlignment(imgAlignmentEnum.RIGHT)}>
             <BiAlignLeft />
           </li>
           <li
@@ -232,7 +317,11 @@ const AtomicBlockToolbar = ({
                 ? 'l-active'
                 : ''
             }
-            onClick={() => toggleAlignment(imgAlignmentEnum.CENTER)}>
+            onMouseUp={() =>
+              setTimeout(() => {
+                toggleAlignment(imgAlignmentEnum.CENTER)
+              }, 200)
+            }>
             <BiAlignMiddle />
           </li>
           <li
@@ -241,36 +330,36 @@ const AtomicBlockToolbar = ({
                 ? 'l-active'
                 : ''
             } l-d`}
-            onClick={() => toggleAlignment(imgAlignmentEnum.LEFT)}>
+            onMouseUp={() => toggleAlignment(imgAlignmentEnum.LEFT)}>
             <BiAlignRight />
           </li>
-          {/* <li onClick={() => toggleFloat('left')}>
+          {/* <li onMouseUp={() => toggleFloat('left')}>
             <BiRightIndent />
           </li>
-          <li className='l-d' onClick={() => toggleFloat('right')}>
+          <li className='l-d' onMouseUp={() => toggleFloat('right')}>
             <BiLeftIndent />
           </li> */}
           <li
             className={entityData && entityData.isBordered ? 'l-active' : ''}
-            onClick={toggleBorder}>
+            onMouseUp={toggleBorder}>
             <BiBorderAll />
           </li>
           <li
             className={entityData && entityData.hasShadow ? 'l-active' : ''}
-            onClick={toggleShadow}>
+            onMouseUp={toggleShadow}>
             <BiSun />
           </li>
           <li
             className={entityData && entityData.isRound ? 'l-active' : ''}
-            onClick={toggleRoundCorners}>
+            onMouseUp={toggleRoundCorners}>
             <BiSquareRounded />
           </li>
           <li
             className={entityData && entityData.isStretched ? 'l-active' : ''}
-            onClick={toggleStretch}>
+            onMouseUp={toggleStretch}>
             <BiExpand />
           </li>
-          <li>
+          <li onMouseUp={onEntityRemove}>
             <BiTrash />
           </li>
         </ul>
@@ -339,9 +428,50 @@ export default function TextEditor() {
       )
     }
   }
-
-  // useEffect(() => {
-  // }, [editorState])
+  const removeCurrentEntity = () => {
+    onEditorStateChange(
+      EditorState.push(
+        editorState,
+        Modifier.applyEntity(
+          editorState.getCurrentContent(),
+          editorState.getSelection(),
+          null
+        ),
+        'apply-entity'
+      )
+    )
+  }
+  const toggleColor = ({ inlineStyle, colorList, prefix }) => {
+    const selection = editorState.getSelection()
+    const nextContentState = colorList.reduce((contentState, color) => {
+      return Modifier.removeInlineStyle(
+        contentState,
+        selection,
+        prefix + '-' + color
+      )
+    }, editorState.getCurrentContent())
+    let nextEditorState = EditorState.push(
+      editorState,
+      nextContentState,
+      'change-inline-style'
+    )
+    const currentStyle = editorState.getCurrentInlineStyle()
+    if (selection.isCollapsed())
+      nextEditorState = currentStyle.reduce((state, color) => {
+        return RichUtils.toggleInlineStyle(state, prefix + '-' + color)
+      }, nextEditorState)
+    if (!currentStyle.has(inlineStyle))
+      nextEditorState = RichUtils.toggleInlineStyle(
+        nextEditorState,
+        inlineStyle
+      )
+    onEditorStateChange(nextEditorState)
+  }
+  useEffect(() => {
+    const k = editorState.getSelection().getStartKey()
+    if (k)
+      console.log(editorState.getCurrentContent().getBlockForKey(k).getType())
+  }, [editorState])
 
   const handleLinkCreation = () => {
     const eKey = getCurrentEntityKey()
@@ -358,9 +488,13 @@ export default function TextEditor() {
       if (eKey) onEditorStateChange(mergeEntityData({ url }, eKey))
       else {
         // currentContent = editorState.getCurrentContent()
-        const newContent = currentContent.createEntity('LINK', 'MUTABLE', {
-          url,
-        })
+        const newContent = currentContent.createEntity(
+          atomicEntityTypes.LINK,
+          'MUTABLE',
+          {
+            url,
+          }
+        )
         onEditorStateChange(
           RichUtils.toggleLink(
             EditorState.push(editorState, newContent, 'create-entity'),
@@ -383,7 +517,8 @@ export default function TextEditor() {
         'IMMUTABLE',
         {
           src: srcData,
-          width: 30,
+          width: 300,
+          alignment: imgAlignmentEnum.CENTER,
           // mediaClickCallback: handleImageClick
         }
       )
@@ -401,8 +536,13 @@ export default function TextEditor() {
     }
   }
 
-  const handleInlineStyle = type =>
-    type && onEditorStateChange(RichUtils.toggleInlineStyle(editorState, type))
+  const handleInlineStyle = styleProp => {
+    if (styleProp.colorList) toggleColor(styleProp)
+    else if (styleProp.inlineStyle)
+      onEditorStateChange(
+        RichUtils.toggleInlineStyle(editorState, styleProp.inlineStyle)
+      )
+  }
 
   const handleBlockStyle = type =>
     type && onEditorStateChange(RichUtils.toggleBlockType(editorState, type))
@@ -415,7 +555,7 @@ export default function TextEditor() {
     currentEditorStatus.currentEntityType === type ? 'selected' : ''
 
   const handleEntityCreation = eType => {
-    if (eType === 'LINK') handleLinkCreation()
+    if (eType === atomicEntityTypes.LINK) handleLinkCreation()
     else handleMediaCreation(eType)
   }
 
@@ -428,7 +568,7 @@ export default function TextEditor() {
             isPreview={isPreview}
             list={inlineStylesMap}
             styleRenderFn={m => getInlineSelectionClass(m.inlineStyle)}
-            onItemClick={m => handleInlineStyle(m.inlineStyle)}
+            onItemClick={handleInlineStyle}
           />
           <ToolbarStyleList
             isPreview={isPreview}
@@ -475,6 +615,7 @@ export default function TextEditor() {
       <div className='editor-wrapper'>
         <AtomicBlockToolbar
           editorState={editorState}
+          onEntityRemove={removeCurrentEntity}
           blockType={currentEditorStatus.currentEntityType}
           entityData={currentEditorStatus.currentEntityData}
           mutateEntity={updateCurrentEntityData}
@@ -498,7 +639,7 @@ export default function TextEditor() {
             if (files[0].type.includes('image')) {
               const f = new FileReader()
               f.onload = () => {
-                handleMediaCreation('image', f.result)
+                handleMediaCreation(atomicEntityTypes.IMAGE, f.result)
               }
               f.readAsDataURL(files[0])
             }

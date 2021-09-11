@@ -1,16 +1,17 @@
 import { IoMdQuote } from 'react-icons/io'
-import { IoImageOutline, IoLink } from 'react-icons/io5'
 import { BsJustify, BsListOl, BsListUl } from 'react-icons/bs'
 import {
   BiBold,
   BiChevronDown,
   BiCode,
   BiColorFill,
-  BiDownArrow,
   BiFontColor,
+  BiImageAlt,
   BiItalic,
+  BiLinkAlt,
   BiStrikethrough,
   BiUnderline,
+  BiVideo,
 } from 'react-icons/bi'
 import {
   AiOutlineAlignCenter,
@@ -19,6 +20,13 @@ import {
 } from 'react-icons/ai'
 import { GrSubscript, GrSuperscript } from 'react-icons/gr'
 import { RiAttachmentLine } from 'react-icons/ri'
+
+export const atomicEntityTypes = {
+  VIDEO: 'VIDEO',
+  IMAGE: 'IMAGE',
+  LINK: 'LINK',
+  ATTACHMENT: 'ATTACHMENT',
+}
 
 const colorList = ['red', 'yellow', 'orange', 'green', 'black', 'white']
 const headingList = ['one', 'two', 'three', 'four', 'five', 'six']
@@ -52,7 +60,12 @@ const FontColorMenu = ({ onItemClick }) => {
             style={{ backgroundColor: c }}
             title={c}
             onClick={() =>
-              onItemClick && onItemClick({ inlineStyle: `font-${c}` })
+              onItemClick &&
+              onItemClick({
+                inlineStyle: `font-${c}`,
+                colorList,
+                prefix: 'font',
+              })
             }
           />
         ))}
@@ -70,7 +83,8 @@ const BgColorMenu = ({ onItemClick }) => {
             style={{ backgroundColor: c }}
             title={c}
             onClick={() =>
-              onItemClick && onItemClick({ inlineStyle: `bg-${c}` })
+              onItemClick &&
+              onItemClick({ inlineStyle: `bg-${c}`, colorList, prefix: 'bg' })
             }
           />
         ))}
@@ -106,7 +120,7 @@ export const inlineStylesMap = [
     content: <BiStrikethrough />,
     divider: true,
   },
-  { text: 'Code', inlineStyle: 'CODE', content: <BiCode/> },
+  { text: 'Code', inlineStyle: 'CODE', content: <BiCode /> },
   {
     text: 'Superscript',
     inlineStyle: 'SUPERSCRIPT',
@@ -131,11 +145,16 @@ export const inlineStylesMap = [
   },
 ]
 export const entityStylesMap = [
-  { text: 'Link', entityType: 'LINK', content: <IoLink /> },
-  { text: 'Image', entityType: 'MEDIA', content: <IoImageOutline /> },
+  { text: 'Link', entityType: atomicEntityTypes.LINK, content: <BiLinkAlt /> },
+  {
+    text: 'Image',
+    entityType: atomicEntityTypes.IMAGE,
+    content: <BiImageAlt />,
+  },
+  { text: 'Video', entityType: atomicEntityTypes.VIDEO, content: <BiVideo /> },
   {
     text: 'Attachment',
-    entityType: 'ATTACHMENT',
+    entityType: atomicEntityTypes.ATTACHMENT,
     content: <RiAttachmentLine />,
     divider: true,
   },

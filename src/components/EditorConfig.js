@@ -4,6 +4,7 @@ import {
   BiBold,
   BiChevronDown,
   BiCode,
+  BiCodeBlock,
   BiColorFill,
   BiFontColor,
   BiImageAlt,
@@ -26,9 +27,20 @@ export const atomicEntityTypes = {
   IMAGE: 'IMAGE',
   LINK: 'LINK',
   ATTACHMENT: 'ATTACHMENT',
+  EMBED: 'EMBED',
 }
 
-const colorList = ['red', 'yellow', 'orange', 'green', 'black', 'white']
+const colorList = [
+  'red',
+  'yellow',
+  'orange',
+  'green',
+  'black',
+  'white',
+  '#2196ff',
+  '#0062ff',
+  '#00ff1a',
+]
 const headingList = ['one', 'two', 'three', 'four', 'five', 'six']
 
 const getColsMap = (prefix, prop = 'color') => {
@@ -156,6 +168,12 @@ export const entityStylesMap = [
     text: 'Attachment',
     entityType: atomicEntityTypes.ATTACHMENT,
     content: <RiAttachmentLine />,
+    // divider: true,
+  },
+  {
+    text: 'Embed HTML',
+    entityType: atomicEntityTypes.EMBED,
+    content: <BiCodeBlock />,
     divider: true,
   },
 ]

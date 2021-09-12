@@ -200,17 +200,15 @@ $accent-color: #2196ff;
         }
       }
       .col-list {
-        display: flex;
-        align-items: center;
-        padding: 0.8rem;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        padding: 0.5rem;
+        gap: 5px;
         > li {
           width: 1.2rem;
           height: 1.2rem;
           border: 1px solid #0002;
-          border-radius: 5px;
-          &:not(:last-child) {
-            margin-right: 5px;
-          }
+          border-radius: 50%;
         }
       }
       .head-list {
@@ -342,8 +340,10 @@ $accent-color: #2196ff;
         z-index: 2;
       }
       &:hover {
-        background-color: #fafafa;
-        box-shadow: 0 0 0 1px #0002;
+        // box-shadow: 0 0 0 1px #0002;
+        > * {
+          box-shadow: 0 0 0 1px orange !important;
+        }
       }
     }
   }
@@ -351,9 +351,10 @@ $accent-color: #2196ff;
 
 .atomic-toolbar {
   position: absolute;
+  animation: fadein 0.2s;
   border: 3px solid $accent-color;
   // transition: 0.2s;
-  pointer-events: none;
+  // pointer-events: none;
   z-index: 20;
   * {
     pointer-events: all;
@@ -364,31 +365,45 @@ $accent-color: #2196ff;
     justify-content: center;
     position: absolute;
     // background-color: #0005;
-    padding: .5rem;
+    // padding: 0.3rem;
     > span {
       display: inline-flex;
       background-color: $accent-color;
       color: #fff;
-      border-radius: 50%;
-      padding: 2px;
+      padding: 5px;
+      border: 1px solid #fff;
+      // border-radius: 5px;
+      // padding: 2px 1.5rem;
       cursor: ew-resize;
       &:active {
         opacity: 0.9;
-        padding: 5px;
+        // padding: 2px 2rem;
       }
     }
   }
   .r-hor {
     top: 0;
     bottom: 0;
-    right: -1.2rem;
+    right: -0.5rem;
+    // > span {
+    //   padding: 5px;
+    // }
   }
   .r-ver {
     left: 0;
-    bottom: -1.2rem;
+    bottom: -0.5rem;
     right: 0;
     > span {
       cursor: ns-resize;
+      // padding: 5px;
+    }
+  }
+  .r-hv {
+    right: -0.5rem;
+    bottom: -0.5rem;
+    > span {
+      cursor: nw-resize;
+      // padding: 5px;
     }
   }
   ul {
@@ -396,7 +411,7 @@ $accent-color: #2196ff;
     align-items: center;
     position: absolute;
     left: 50%;
-    bottom: calc(100%);
+    bottom: calc(100% + 5px);
     transform: translateX(-50%);
     list-style-type: none;
     padding: 2px;
@@ -404,7 +419,7 @@ $accent-color: #2196ff;
     border: 1px solid #0001;
     background-color: #fff;
     box-shadow: 0 2px 5px #0002;
-    border-radius: 5px;
+    border-radius: 3px;
     > li {
       position: relative;
       cursor: pointer;
@@ -447,5 +462,13 @@ $accent-color: #2196ff;
   to {
     opacity: 1;
     transform: translate(-50%, 0);
+  }
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

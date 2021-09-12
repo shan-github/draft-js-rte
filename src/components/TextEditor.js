@@ -24,9 +24,12 @@ import {
   BiBorderAll,
   BiCheck,
   BiCodeAlt,
+  BiCopyAlt,
   BiDownArrowAlt,
   BiExpand,
+  BiLeftIndent,
   BiRightArrowAlt,
+  BiRightIndent,
   BiSquareRounded,
   BiSun,
   BiTrash,
@@ -38,7 +41,8 @@ let currentContent
 
 const MediaBlock = props => {
   const ekey = props.block.getEntityAt(0)
-  const eType = props.contentState.getEntity(ekey).getType()
+  const eType = ekey && props.contentState.getEntity(ekey).getType()
+  const targetRef = useRef(null)
   const {
     src,
     alignment,
@@ -69,11 +73,16 @@ const MediaBlock = props => {
           }`,
     height,
   }
+  useEffect(() => {
+    if (targetRef.current) targetRef.current.innerHTML = src
+  }, [src])
   switch (eType) {
     case atomicEntityTypes.IMAGE:
       return <img src={src} style={imgStyles} />
     case atomicEntityTypes.VIDEO:
       return <iframe style={imgStyles} src={src} />
+    case atomicEntityTypes.EMBED:
+      return <div style={imgStyles} ref={targetRef} />
     default:
       return null
   }
@@ -136,32 +145,56 @@ const BlockResizer = ({
 }) => {
   const [isClicked, setIsClicked] = useState(false)
   const deltaOffset = useRef({ dx: 0, dy: 0 })
-  const handleResize = e => {
-    if (isClicked)
-      onResize({
-        dx: e.clientX - deltaOffset.current.dx,
-        dy: e.clientY - deltaOffset.current.dy,
-        type,
-      })
+  const handleResize = useCallback(e => {
+    // if (isClicked)
+    onResize({
+      dx: e.clientX - deltaOffset.current.dx,
+      dy: e.clientY - deltaOffset.current.dy,
+      type,
+    })
     deltaOffset.current.dx = e.clientX
     deltaOffset.current.dy = e.clientY
-  }
+  }, [])
+
+  const handleRelease = useCallback(() => {
+    onMouseRelease({ type })
+    setIsClicked(false)
+  }, [])
+
+  useEffect(() => {
+    // console.log(isClicked)
+    if (isClicked) {
+      console.log('adding...')
+      window.addEventListener('mousemove', handleResize)
+      window.addEventListener('mouseup', handleRelease)
+    } else {
+      console.log('removing...')
+      window.removeEventListener('mousemove', handleResize)
+      window.removeEventListener('mouseup', handleRelease)
+    }
+  }, [isClicked])
   return (
     <div
       className={`a-t-resize ${customClassName}`}
-      onMouseMove={handleResize}
-      onMouseUp={() => {
-        onMouseRelease({ type })
-        setIsClicked(false)
-      }}
-      onMouseLeave={() => {
-        if (isClicked) {
-          onMouseRelease({ type })
-          setIsClicked(false)
-        }
-      }}>
-      <span onMouseDown={() => setIsClicked(true)}>
-        {ActionIcon && <ActionIcon />}
+      // onMouseMove={handleResize}
+      // onMouseUp={() => {
+      //   onMouseRelease({ type })
+      //   setIsClicked(false)
+      // }}
+      // onMouseLeave={() => {
+      //   onMouseRelease({ type })
+      //   setIsClicked(false)
+      // }}
+    >
+      <span
+        onMouseDown={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          deltaOffset.current.dx = e.clientX
+          deltaOffset.current.dy = e.clientY
+          setIsClicked(true)
+        }}>
+        {/* {ActionIcon && <ActionIcon />} */}
       </span>
     </div>
   )
@@ -182,12 +215,13 @@ const AtomicBlockToolbar = ({
     if (currentSelectedElm.current && currentSelectedElm.current.firstChild) {
       // const bounds = currentSelectedElm.current.getBoundingClientRect()
       const b = {
-        top: currentSelectedElm.current.offsetTop,
+        top: currentSelectedElm.current.offsetTop - 1,
         left:
           currentSelectedElm.current.firstChild.offsetLeft +
-          currentSelectedElm.current.offsetLeft,
-        width: currentSelectedElm.current.firstChild.clientWidth,
-        height: currentSelectedElm.current.firstChild.clientHeight,
+          currentSelectedElm.current.offsetLeft -
+          1,
+        width: currentSelectedElm.current.firstChild.clientWidth + 2,
+        height: currentSelectedElm.current.firstChild.clientHeight + 2,
       }
       setElmOffset(b)
     }
@@ -266,7 +300,8 @@ const AtomicBlockToolbar = ({
         }px`
       else {
         currentSelectedElm.current.firstChild.style.width = `${
-          currentSelectedElm.current.firstChild.clientWidth + dx
+          currentSelectedElm.current.firstChild.clientWidth +
+          dx * (entityData.alignment === imgAlignmentEnum.CENTER ? 2 : 1)
         }px`
         currentSelectedElm.current.firstChild.style.height = `${
           currentSelectedElm.current.firstChild.clientHeight + dy
@@ -281,7 +316,7 @@ const AtomicBlockToolbar = ({
       <div className='atomic-toolbar' style={elmOffset ?? {}}>
         {entityData && !entityData.isStretched && (
           <BlockResizer
-            icon={BiRightArrowAlt}
+            // icon={BiRightArrowAlt}
             type={0}
             onResize={onBlockResize}
             onMouseRelease={onBlockResizeCancel}
@@ -289,11 +324,18 @@ const AtomicBlockToolbar = ({
           />
         )}
         <BlockResizer
-          icon={BiDownArrowAlt}
+          // icon={BiDownArrowAlt}
           type={1}
           onResize={onBlockResize}
           onMouseRelease={onBlockResizeCancel}
           customClassName='r-ver'
+        />
+        <BlockResizer
+          // icon={BiRightArrowAlt}
+          type={2}
+          onResize={onBlockResize}
+          onMouseRelease={onBlockResizeCancel}
+          customClassName='r-hv'
         />
         {/* <BlockResizer
           icon={BiDownArrowAlt}
@@ -339,11 +381,11 @@ const AtomicBlockToolbar = ({
           <li className='l-d' onMouseUp={() => toggleFloat('right')}>
             <BiLeftIndent />
           </li> */}
-          <li
+          {/* <li
             className={entityData && entityData.isBordered ? 'l-active' : ''}
             onMouseUp={toggleBorder}>
             <BiBorderAll />
-          </li>
+          </li> */}
           <li
             className={entityData && entityData.hasShadow ? 'l-active' : ''}
             onMouseUp={toggleShadow}>
@@ -467,11 +509,11 @@ export default function TextEditor() {
       )
     onEditorStateChange(nextEditorState)
   }
-  useEffect(() => {
-    const k = editorState.getSelection().getStartKey()
-    if (k)
-      console.log(editorState.getCurrentContent().getBlockForKey(k).getType())
-  }, [editorState])
+  // useEffect(() => {
+  //   const k = editorState.getSelection().getStartKey()
+  //   if (k)
+  //     console.log(editorState.getCurrentContent().getBlockForKey(k).getType())
+  // }, [editorState])
 
   const handleLinkCreation = () => {
     const eKey = getCurrentEntityKey()
@@ -509,7 +551,19 @@ export default function TextEditor() {
   const handleMediaCreation = (eType, data) => {
     let srcData
     currentContent = editorState.getCurrentContent()
-    srcData = data || window.prompt('Paste Image Link')
+    srcData =
+      data ||
+      window.prompt(
+        eType === atomicEntityTypes.IMAGE
+          ? 'Paste Image Link'
+          : eType === atomicEntityTypes.VIDEO
+          ? 'Paste video url here'
+          : eType === atomicEntityTypes.EMBED
+          ? 'Paste html code here'
+          : eType === atomicEntityTypes.ATTACHMENT
+          ? 'Paste text here'
+          : ''
+      )
     currentContent = editorState.getCurrentContent()
     if (srcData) {
       const contentStateWithEntity = currentContent.createEntity(
@@ -595,7 +649,7 @@ export default function TextEditor() {
                   setIsCopied(false)
                 }, 1000)
               }}>
-              {isCopied ? <BiCheck /> : <BiCodeAlt />}
+              {isCopied ? <BiCheck /> : <BiCopyAlt />}
               <span className='t-ttip'>Copy html</span>
             </li>
             <li onClick={() => setIsPreview(p => !p)}>

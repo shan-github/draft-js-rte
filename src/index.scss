@@ -162,10 +162,12 @@ $accent-color: #2196ff;
           }
         }
 
-        // &:active {
-        //   background-color: $accent-color;
-        //   color: #fff;
-        // }
+        &:active {
+          // background-color: #000;
+          > svg {
+            color: #fff;
+          }
+        }
       }
       .i-dd {
         display: flex;
@@ -185,12 +187,13 @@ $accent-color: #2196ff;
       transform: translateX(-50%);
       z-index: 20;
       padding-top: 0.5rem;
+      animation: fadein 0.2s;
 
       > div {
         background-color: #fff;
-        box-shadow: 0 2px 5px #0001;
-        border: 1px solid #0001;
-        border-radius: 5px;
+        box-shadow: 0 5px 0.5rem #0001;
+        border: 1px solid #0002;
+        border-radius: 3px;
         > span {
           display: block;
           white-space: nowrap;
@@ -214,19 +217,68 @@ $accent-color: #2196ff;
       .head-list {
         display: flex;
         flex-direction: column;
-        min-width: 120px;
+        min-width: 70px;
+        max-height: 450px;
+        overflow-y: auto;
         > li {
           line-height: 1;
           font-size: 0.85rem;
           white-space: nowrap;
           padding: 0.5rem;
           //   font-weight: 500;
-          //   &:not(:last-child){
-          //       border-bottom: 1px solid #0001;
-          //   }
-          &:hover {
-            background-color: #{$accent-color}12;
+          // &:not(:last-child) {
+          //   border-bottom: 1px solid #9991;
+          // }
+          > * {
+            margin: 0;
           }
+          &:hover {
+            background-color: $accent-color;
+            color: #fff;
+          }
+        }
+      }
+    }
+  }
+}
+.util-btns {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  > ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    background-color: #fff;
+    border: 1px solid #0002;
+    box-shadow: 0 2px 5px #0001;
+    border-radius: 5px;
+    li {
+      display: flex;
+      padding: .7rem;
+      position: relative;
+      cursor: pointer;
+      &:not(:last-child) {
+        border-bottom: 1px solid #0001;
+      }
+      svg{
+        font-size: 1.3rem;
+      }
+      > span {
+        display: none;
+        position: absolute;
+        right: calc(100% + 0.5rem);
+        white-space: nowrap;
+        font-size: 0.75rem;
+        background-color: #000;
+        color: #fff;
+        padding: 3px 0.5rem;
+        border-radius: 5px;
+      }
+      &:hover {
+        background-color: #0001;
+        > span {
+          display: block;
         }
       }
     }

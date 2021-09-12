@@ -509,11 +509,16 @@ export default function TextEditor() {
       )
     onEditorStateChange(nextEditorState)
   }
-  // useEffect(() => {
-  //   const k = editorState.getSelection().getStartKey()
-  //   if (k)
-  //     console.log(editorState.getCurrentContent().getBlockForKey(k).getType())
-  // }, [editorState])
+  useEffect(() => {
+    // if (
+    //   editorRef.current &&
+    //   editorRef.current.editor !== document.activeElement
+    // )
+    //   editorRef.current.focus()
+    // const k = editorState.getSelection().getStartKey()
+    // if (k)
+    //   console.log(editorState.getCurrentContent().getBlockForKey(k).getType())
+  }, [editorState])
 
   const handleLinkCreation = () => {
     const eKey = getCurrentEntityKey()
@@ -636,27 +641,6 @@ export default function TextEditor() {
             styleRenderFn={m => getBlockSelectionClass(m.blockStyle)}
             onItemClick={m => handleBlockStyle(m.blockStyle)}
           />
-          <ul>
-            <li
-              onClick={() => {
-                if (!isCopied) {
-                  window.navigator.clipboard.writeText(
-                    editorRef.current.editor.innerHTML
-                  )
-                }
-                setIsCopied(true)
-                setTimeout(() => {
-                  setIsCopied(false)
-                }, 1000)
-              }}>
-              {isCopied ? <BiCheck /> : <BiCopyAlt />}
-              <span className='t-ttip'>Copy html</span>
-            </li>
-            <li onClick={() => setIsPreview(p => !p)}>
-              {isPreview ? <IoEyeOff /> : <IoEye />}
-              <span className='t-ttip'>Preview</span>
-            </li>
-          </ul>
         </div>
         <div className='t-btns'>
           <button>Save</button>
@@ -699,6 +683,30 @@ export default function TextEditor() {
             }
           }}
         />
+      </div>
+      <div className='util-btns'>
+        <ul>
+          <li
+            style={isCopied ? { backgroundColor: 'green' } : {}}
+            onClick={() => {
+              if (!isCopied) {
+                window.navigator.clipboard.writeText(
+                  editorRef.current.editor.innerHTML
+                )
+              }
+              setIsCopied(true)
+              setTimeout(() => {
+                setIsCopied(false)
+              }, 1000)
+            }}>
+            {isCopied ? <BiCheck color='#fff' /> : <BiCopyAlt />}
+            <span className='t-ttip'>Copy html</span>
+          </li>
+          <li onClick={() => setIsPreview(p => !p)}>
+            {isPreview ? <IoEyeOff /> : <IoEye />}
+            <span className='t-ttip'>Preview</span>
+          </li>
+        </ul>
       </div>
     </div>
   )

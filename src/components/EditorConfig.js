@@ -7,6 +7,8 @@ import {
   BiCodeBlock,
   BiColorFill,
   BiFontColor,
+  BiFontFamily,
+  BiFontSize,
   BiImageAlt,
   BiItalic,
   BiLinkAlt,
@@ -42,10 +44,33 @@ const colorList = [
   '#00ff1a',
 ]
 const headingList = ['one', 'two', 'three', 'four', 'five', 'six']
+const fontSizeList = [8, 9, 10, 11, 12, 14, 18, 24, 30, 36, 48, 60, 72, 96]
+const fontList = [
+  'Yu Mincho',
+  'Yu Gothic',
+  'Yu Gothic UI',
+  'BIZ UDMincho Medium',
+  'UD Digi Kyokasho N-R',
+  'UD Digi Kyokasho NP-B',
+  'UD Digi Kyokasho NK-R',
+  'Cambria',
+  'Cochin',
+  'Georgia',
+  'Times New Roman',
+  'serif',
+  'Franklin Gothic Medium',
+  'Arial Narrow',
+  'Arial',
+  'sans-serif',
+  // 'Gill Sans',
+  // 'Gill Sans MT',
+  'Calibri',
+  // 'Trebuchet MS',
+]
 
-const getColsMap = (prefix, prop = 'color') => {
+const getColsMap = (prefix, prop = 'color', list) => {
   const t = {}
-  colorList.forEach(c => {
+  ;(list || colorList).forEach(c => {
     t[`${prefix}-${c}`] = { [prop]: c }
   })
   return t
@@ -104,7 +129,70 @@ const BgColorMenu = ({ onItemClick }) => {
     </MenuWrapper>
   )
 }
+const FontFamilyMenu = ({ onItemClick }) => {
+  return (
+    <MenuWrapper>
+      <ul className='head-list'>
+        {fontList.map(h => (
+          <li
+            style={{ fontFamily: h }}
+            // title={h}
+            onClick={() =>
+              onItemClick &&
+              onItemClick({
+                inlineStyle: `font-family-${h}`,
+                colorList: fontList,
+                prefix: 'font-family',
+              })
+            }>
+            {h}
+          </li>
+        ))}
+      </ul>
+    </MenuWrapper>
+  )
+}
+const FontSizeMenu = ({ onItemClick }) => {
+  return (
+    <MenuWrapper>
+      <ul className='head-list'>
+        {fontSizeList.map(h => (
+          <li
+            // style={{ fontFamily: h }}
+            onClick={() =>
+              onItemClick &&
+              onItemClick({
+                inlineStyle: `font-size-${h}`,
+                colorList: fontSizeList,
+                prefix: 'font-size',
+              })
+            }>
+            {h}
+          </li>
+        ))}
+      </ul>
+    </MenuWrapper>
+  )
+}
 const HeadingMenu = ({ onItemClick }) => {
+  const getHeading = hIndex => {
+    switch (hIndex) {
+      case 1:
+        return <h1>Heading 1</h1>
+      case 2:
+        return <h2>Heading 2</h2>
+      case 3:
+        return <h3>Heading 3</h3>
+      case 4:
+        return <h4>Heading 4</h4>
+      case 5:
+        return <h5>Heading 5</h5>
+      case 6:
+        return <h6>Heading 6</h6>
+      default:
+        break
+    }
+  }
   return (
     <MenuWrapper>
       <ul className='head-list'>
@@ -114,7 +202,7 @@ const HeadingMenu = ({ onItemClick }) => {
             onClick={() =>
               onItemClick && onItemClick({ blockStyle: `header-${h}` })
             }>
-            Heading {hI + 1}
+            {getHeading(hI + 1)}
           </li>
         ))}
       </ul>
@@ -153,6 +241,20 @@ export const inlineStylesMap = [
     inlineStyle: 'HIGHLIGHT',
     content: <BiColorFill />,
     menuComponent: BgColorMenu,
+    // divider: true,
+  },
+  {
+    text: 'Font Family',
+    // inlineStyle: 'HIGHLIGHT',
+    content: <BiFontFamily />,
+    menuComponent: FontFamilyMenu,
+    // divider: true,
+  },
+  {
+    text: 'Font Size',
+    // inlineStyle: 'HIGHLIGHT',
+    content: <BiFontSize />,
+    menuComponent: FontSizeMenu,
     divider: true,
   },
 ]
@@ -164,12 +266,12 @@ export const entityStylesMap = [
     content: <BiImageAlt />,
   },
   { text: 'Video', entityType: atomicEntityTypes.VIDEO, content: <BiVideo /> },
-  {
-    text: 'Attachment',
-    entityType: atomicEntityTypes.ATTACHMENT,
-    content: <RiAttachmentLine />,
-    // divider: true,
-  },
+  // {
+  //   text: 'Attachment',
+  //   entityType: atomicEntityTypes.ATTACHMENT,
+  //   content: <RiAttachmentLine />,
+  //   // divider: true,
+  // },
   {
     text: 'Embed HTML',
     entityType: atomicEntityTypes.EMBED,
@@ -223,7 +325,7 @@ export const blockStylesMap = [
     text: 'Ordered List',
     blockStyle: 'ordered-list-item',
     content: <BsListOl />,
-    divider: true,
+    // divider: true,
   },
 ]
 export const customInlineStylesMap = {
@@ -250,6 +352,8 @@ export const customInlineStylesMap = {
   },
   ...getColsMap('font', 'color'),
   ...getColsMap('bg', 'background-color'),
+  ...getColsMap('font-family', 'font-family', fontList),
+  ...getColsMap('font-size', 'font-size', fontSizeList),
 }
 export const customBlockStyleFn = block => {
   switch (block.getType()) {

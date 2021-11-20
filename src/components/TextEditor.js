@@ -28,11 +28,13 @@ import {
   BiDownArrowAlt,
   BiExpand,
   BiLeftIndent,
+  BiLink,
   BiRightArrowAlt,
   BiRightIndent,
   BiSquareRounded,
   BiSun,
   BiTrash,
+  BiX,
 } from 'react-icons/bi'
 
 const imgAlignmentEnum = { LEFT: -1, CENTER: 0, RIGHT: 1 }
@@ -410,12 +412,39 @@ const AtomicBlockToolbar = ({
   )
 }
 
+const AtomicModal = () => {
+  return (
+    <div className='modal-main'>
+      <span className='m-close'>
+        <BiX />
+      </span>
+      <div className='modal-main--head'>
+        <BiLink />
+        <span>
+          Insert Link
+          <span>Must be a valid Url</span>
+        </span>
+      </div>
+      <div className='modal-main--body'>
+        <div className='m-input'>
+          <input placeholder='Link URL' />
+        </div>
+      </div>
+      <div className='modal-main--bottom'>
+        <button className='btn-light'>Cancel</button>
+        <button>Insert</button>
+      </div>
+    </div>
+  )
+}
+
 export default function TextEditor() {
   const [editorState, setEditorState] = useState(
     EditorState.createEmpty(decorator)
   )
   const [isPreview, setIsPreview] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
+  const [popupState, setPopupState] = useState(null)
   // const [inlineToolbar, setInlineToolbar] = useState({ image: true })
 
   const editorRef = useRef(null)
@@ -509,16 +538,9 @@ export default function TextEditor() {
       )
     onEditorStateChange(nextEditorState)
   }
-  useEffect(() => {
-    // if (
-    //   editorRef.current &&
-    //   editorRef.current.editor !== document.activeElement
-    // )
-    //   editorRef.current.focus()
-    // const k = editorState.getSelection().getStartKey()
-    // if (k)
-    //   console.log(editorState.getCurrentContent().getBlockForKey(k).getType())
-  }, [editorState])
+  // useEffect(() => {
+
+  // }, [editorState])
 
   const handleLinkCreation = () => {
     const eKey = getCurrentEntityKey()
@@ -708,6 +730,11 @@ export default function TextEditor() {
           </li>
         </ul>
       </div>
+      {/* {popupState && (
+        <div className='rte-modal'>
+          <AtomicModal />
+        </div>
+      )} */}
     </div>
   )
 }
